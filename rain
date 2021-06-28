@@ -1,0 +1,31 @@
+aus = pd.read_csv(path2)
+aus.dropna(inplace=True)
+weather = ['WindSpeed9am', 'WindSpeed3pm','Humidity9am','Humidity3pm','Pressure9am','Pressure3pm','Cloud9am','Cloud3pm','RainToday']
+X = aus[weather]
+y = aus['RainTomorrow']
+
+cat_cols = X.select_dtypes(include=['object']).columns
+num_cols = X.select_dtypes(exclude=['object']).columns
+X = aus[weather]
+y = aus['RainTomorrow'].apply(lambda row: 1 if row == "Yes" else 0)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=123, test_size=.25)
+k=11
+
+transform = make_column_transformer(
+           (OneHotEncoder(), cat_cols),
+            (StandardScaler(), num_cols),
+             remainder='passthrough')
+
+model = LogisticRegression()
+RandomOverSampler(X, y)
+
+pipe = make_pipeline(RandomOverSampler(), transform, model)
+
+pipe.fit(X_train, y_train)
+print(pipe.score(X_test, y_test))
+
+conf = ConfusionMatrix(pipe)
+
+conf.fit(X_train, y_train)
+print(conf.score(X_test, y_test))
